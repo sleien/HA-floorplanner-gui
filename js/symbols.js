@@ -168,9 +168,12 @@
       // On colour = currentColor; off colour is read from --icon-off by the CSS.
       const color = ic.color || FP.STYLE.iconOn;
       const off = ic.colorOff || FP.STYLE.iconOff;
+      // an invisible full-size rect makes the whole icon box clickable, not just
+      // the painted parts (many MDI icons are hollow outlines)
       return `<g id="${id}" class="ha-entity icon mdi${dev}" ` +
              `transform="translate(${x} ${y}) scale(${r2(w / 24)} ${r2(h / 24)})" ` +
              `style="color:${esc(color)};--icon-off:${esc(off)}" ${hl}>` +
+             `<rect width="24" height="24" fill="none" pointer-events="all"/>` +
              `<path d="${esc(ic.pathData)}" fill="currentColor"/></g>`;
     }
     return `<image id="${id}" class="ha-entity icon${dev}" ` +
