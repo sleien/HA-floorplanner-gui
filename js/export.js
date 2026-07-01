@@ -233,6 +233,9 @@ svg g#layer-walls > path.wall { pointer-events: none !important; }
     const temps = model.sensors.filter((s) => s.entity && s.entity.trim());
     const fans = model.fans.filter((f) => f.entity && f.entity.trim());
     const icons = model.icons.filter((i) => i.entity && i.entity.trim());
+    // icons with no entity but a service tap (e.g. run a script) — bound by element id
+    const actionIcons = model.icons.filter((i) =>
+      !(i.entity && i.entity.trim()) && i.tap && i.tap.trim() && i.tap !== 'more-info');
 
     let y = '';
     y += `image: ${dir}/${base}.svg\n`;
@@ -286,7 +289,15 @@ svg g#layer-walls > path.wall { pointer-events: none !important; }
       }
     }
 
-    if (!rooms.length && !temps.length && !fans.length && !icons.length) {
+    // entity-less action buttons: bind the click to the element and call the service
+    for (const ic of actionIcons) {
+      y += `  - element: ${FP.sym.iconElementId(ic)}\n`;
+      y += `    tap_action:\n`;
+      y += `      action: call-service\n`;
+      y += `      service: ${ic.tap.trim()}\n`;
+    }
+
+    if (!rooms.length && !temps.length && !fans.length && !icons.length && !actionIcons.length) {
       y += `  []  # add lights, sensors, a fan or an icon and set their HA entity ids\n`;
     }
     return y.replace(/\n+$/, '');

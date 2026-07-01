@@ -162,7 +162,8 @@
     const id = esc(S.iconElementId(ic));
     const x = r2(ic.x - w / 2), y = r2(ic.y - h / 2);
     const hl = `inkscape:highlight-color="${FP.STYLE.layerHA}"`;
-    const dev = ic.stateColor ? ' device-off' : '';
+    // state colouring only makes sense with an entity; a plain action button stays full colour
+    const dev = (ic.stateColor && ic.entity && ic.entity.trim()) ? ' device-off' : '';
     if (ic.pathData) {
       // Material Design Icon — a 24×24 path scaled into place, recoloured via CSS fill.
       // On colour = currentColor; off colour is read from --icon-off by the CSS.

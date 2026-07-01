@@ -359,6 +359,7 @@
       <div class="field"><label>Service called on tap</label>
         <input id="i-tapsvc" type="text" value="${attr(o.tap)}"></div>
       <label class="toggle"><input id="i-statecolor" type="checkbox" ${o.stateColor ? 'checked' : ''}> Grey out when off / colour when on</label>
+      ${(o.entity && o.entity.trim()) ? '' : '<p class="small muted">No entity set — this becomes a plain button that runs its tap action (e.g. a script). It stays full colour; colour-by-state needs an entity.</p>'}
       ${o.pathData ? `
       <div class="field" style="margin-top:10px"><label>Material icon</label>
         <input id="i-mdi" type="text" value="${attr(o.mdi || '')}" placeholder="e.g. television"></div>
