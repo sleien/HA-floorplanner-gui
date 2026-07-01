@@ -135,7 +135,7 @@
   S.sensor = (s) => {
     const label = s.text || '20.0°';
     return `<text id="${esc(S.sensorElementId(s))}" class="ha-entity sensor" ` +
-           `x="${r2(s.x)}" y="${r2(s.y)}" text-anchor="middle" dominant-baseline="central" ` +
+           `x="${r2(s.x)}" y="${r2(s.y)}" text-anchor="${s.anchor || 'middle'}" dominant-baseline="central" ` +
            `font-family="Helvetica, Arial, sans-serif" font-size="${s.size || 16}">` +
            `<tspan>${esc(label)}</tspan></text>`;
   };
@@ -176,6 +176,8 @@
     const mom = S.isMomentary(ic);
     const dev = (mom || (ic.stateColor && ic.entity && ic.entity.trim())) ? ' device-off' : '';
     const btn = mom ? ' momentary' : '';   // lets the editor preview it as "off" too
+    // friendly name → native hover tooltip (handy when there's no HA state to show)
+    const title = ic.name && ic.name.trim() ? `<title>${esc(ic.name.trim())}</title>` : '';
     if (ic.pathData) {
       // Material Design Icon — a 24×24 path scaled into place, recoloured via CSS fill.
       // On colour = currentColor; off colour is read from --icon-off by the CSS.
@@ -185,13 +187,13 @@
       // the painted parts (many MDI icons are hollow outlines)
       return `<g id="${id}" class="ha-entity icon mdi${dev}${btn}" ` +
              `transform="translate(${x} ${y}) scale(${r2(w / 24)} ${r2(h / 24)})" ` +
-             `style="color:${esc(color)};--icon-off:${esc(off)}" ${hl}>` +
+             `style="color:${esc(color)};--icon-off:${esc(off)}" ${hl}>` + title +
              `<rect width="24" height="24" fill="none" stroke="none" pointer-events="all"/>` +
              `<path d="${esc(ic.pathData)}" fill="currentColor"/></g>`;
     }
     return `<image id="${id}" class="ha-entity icon${dev}${btn}" ` +
            `x="${x}" y="${y}" width="${r2(w)}" height="${r2(h)}" href="${esc(ic.href)}" ` +
-           `preserveAspectRatio="xMidYMid meet" ${hl}/>`;
+           `preserveAspectRatio="xMidYMid meet" ${hl}>${title}</image>`;
   };
 
   // ---- Room name label (plain, not an entity) ------------------------------

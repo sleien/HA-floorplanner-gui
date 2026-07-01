@@ -360,14 +360,18 @@
         <input id="i-elid" type="text" value="${attr(FP.sym.sensorElementId(o))}" readonly></div>
       <div class="field"><label>Placeholder text</label>
         <input id="i-text" type="text" value="${attr(o.text)}"></div>
-      <div class="field"><label>Font size</label>
-        <input id="i-size" type="number" step="1" min="6" value="${o.size || 16}"></div>
+      <div class="field row">
+        <div><label>Font size</label><input id="i-size" type="number" step="1" min="6" value="${o.size || 16}"></div>
+        <div><label>Align</label><span class="seg" id="i-anchor"><button data-v="start" class="${o.anchor === 'start' ? 'on' : ''}">Left</button><button data-v="middle" class="${(o.anchor || 'middle') === 'middle' ? 'on' : ''}">Center</button><button data-v="end" class="${o.anchor === 'end' ? 'on' : ''}">Right</button></span></div>
+      </div>
       ${deleteBtn()}`,
     icons: (o) => {
       const presets = ['more-info', 'homeassistant.toggle', 'button.press', 'script.turn_on'];
       const opt = (v, label) => `<option value="${v}" ${o.tap === v ? 'selected' : ''}>${label}</option>`;
       const customSel = presets.includes(o.tap) ? '' : 'selected';
       return `
+      <div class="field"><label>Friendly name</label>
+        <input id="i-name" type="text" placeholder="e.g. Living-room PC" value="${attr(o.name)}"></div>
       <div class="field"><label>Entity / button / script (Home Assistant)</label>
         <input id="i-entity" type="text" placeholder="switch.pc · button.wake_on_lan_… · script.movie" value="${attr(o.entity)}"></div>
       <div class="field"><label>SVG element id (matches the entity)</label>
@@ -448,6 +452,7 @@
       });
       on('i-text', 'input', (e) => live(() => { o.text = e.target.value; }));
       on('i-size', 'input', (e) => live(() => { o.size = parseFloat(e.target.value) || 16; }));
+      segClick('i-anchor', (v) => live(() => { o.anchor = v; }));
     }
     if (sel.type === 'fans') {
       on('i-entity', 'input', (e) => {
@@ -457,6 +462,7 @@
       on('i-r', 'input', (e) => live(() => { o.r = mToPx(e.target.value) || o.r; }));
     }
     if (sel.type === 'icons') {
+      on('i-name', 'input', (e) => { live(() => { o.name = e.target.value; }); refreshHA(); });
       on('i-entity', 'input', (e) => {
         live(() => { o.entity = e.target.value.trim(); o.slug = slugFromEntity(o.entity, o.slug); });
         const el = $('i-elid'); if (el) el.value = FP.sym.iconElementId(o);
@@ -516,7 +522,7 @@
       placeholder: 'fan.living_room', field: 'entity',
     })));
     out += haGroup('Devices / icons', '#7e57c2', FP.model.icons.map((ic) => ({
-      key: ic.id, type: 'icons', name: ic.slug, val: ic.entity,
+      key: ic.id, type: 'icons', name: ic.name || ic.slug, val: ic.entity,
       placeholder: 'switch.pc · button.wake_on_lan_…', field: 'entity',
     })));
 
