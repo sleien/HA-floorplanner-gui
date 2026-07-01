@@ -42,6 +42,7 @@
 
     resize();
     window.addEventListener('resize', resize);
+    Ed.ready = true;
     Ed.render();
   };
 
@@ -732,6 +733,9 @@
     const wMin = -v.tx / v.zoom, wMax = (r.width - v.tx) / v.zoom;
     const hMin = -v.ty / v.zoom, hMax = (r.height - v.ty) / v.zoom;
     const step = 100; // 1 m
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const cMinor = dark ? '#282c34' : '#eceef2';
+    const cMajor = dark ? '#363c47' : '#d3d8e0';
     let out = '';
     const x0 = Math.floor(wMin / step) * step, x1 = Math.ceil(wMax / step) * step;
     const y0 = Math.floor(hMin / step) * step, y1 = Math.ceil(hMax / step) * step;
@@ -739,12 +743,12 @@
       for (let x = x0; x <= x1; x += step) {
         const major = Math.round(x / step) % 5 === 0;
         out += `<line x1="${x}" y1="${y0}" x2="${x}" y2="${y1}" ` +
-               `stroke="${major ? '#d3d8e0' : '#eceef2'}" stroke-width="${(major ? 1.2 : 0.7) / v.zoom}"/>`;
+               `stroke="${major ? cMajor : cMinor}" stroke-width="${(major ? 1.2 : 0.7) / v.zoom}"/>`;
       }
       for (let y = y0; y <= y1; y += step) {
         const major = Math.round(y / step) % 5 === 0;
         out += `<line x1="${x0}" y1="${y}" x2="${x1}" y2="${y}" ` +
-               `stroke="${major ? '#d3d8e0' : '#eceef2'}" stroke-width="${(major ? 1.2 : 0.7) / v.zoom}"/>`;
+               `stroke="${major ? cMajor : cMinor}" stroke-width="${(major ? 1.2 : 0.7) / v.zoom}"/>`;
       }
     }
     gridG.innerHTML = out;

@@ -105,6 +105,7 @@
     st.theme = theme;
     const btn = $('btn-theme');
     if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+    if (FP.editor && FP.editor.ready) FP.editor.render();   // refresh the JS-drawn grid
   }
 
   // keep the Preview button + hint in sync with the mode
