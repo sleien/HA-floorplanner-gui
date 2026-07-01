@@ -6,6 +6,15 @@
   <title>HA Floorplanner GUI</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/app.css" />
+  <script>
+    // apply the saved (or system) theme before first paint to avoid a flash
+    try {
+      var p = JSON.parse(localStorage.getItem('floorplanner_ha_prefs_v1') || '{}');
+      var t = (p.theme === 'light' || p.theme === 'dark') ? p.theme
+        : (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <header id="topbar">
@@ -28,6 +37,7 @@
       <label class="toggle"><input id="chk-dims" type="checkbox" checked /> Dims</label>
       <label class="toggle num" title="Text size for room labels & dimensions (px)">Text <input id="font-size" type="number" min="6" max="60" step="1" /></label>
       <span class="sep"></span>
+      <button id="btn-theme" class="btn icon" title="Toggle light / dark theme" aria-label="Toggle theme">🌙</button>
       <button id="btn-preview" class="btn" title="Preview the Home Assistant interactions — click rooms to toggle lights, fans to spin">▶ Preview</button>
       <button id="btn-export" class="btn primary" title="Generate SVG, CSS and YAML">Export ⤓</button>
     </div>

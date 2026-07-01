@@ -54,6 +54,7 @@
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify({
         showGrid: FP.state.showGrid, snap: FP.state.snap, showDims: FP.state.showDims,
+        theme: FP.state.theme,
       }));
     } catch (e) { /* ignore */ }
   };
@@ -63,6 +64,7 @@
       if (typeof p.showGrid === 'boolean') FP.state.showGrid = p.showGrid;
       if (typeof p.snap === 'boolean') FP.state.snap = p.snap;
       if (typeof p.showDims === 'boolean') FP.state.showDims = p.showDims;
+      if (p.theme === 'light' || p.theme === 'dark') FP.state.theme = p.theme;
     } catch (e) { /* ignore */ }
   };
 

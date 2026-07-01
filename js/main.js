@@ -33,6 +33,8 @@
     };
     FP.onPreviewChange = onPreviewChange;
 
+    applyTheme(FP.state.theme || currentTheme());
+
     FP.editor.init($('stage'));
     wireToolbar();
     wireTopbar();
@@ -88,6 +90,21 @@
     });
     $('btn-export').addEventListener('click', openExport);
     $('btn-preview').addEventListener('click', () => FP.editor.setPreview(!st.preview));
+    $('btn-theme').addEventListener('click', () => {
+      applyTheme(st.theme === 'dark' ? 'light' : 'dark');
+      FP.savePrefs();
+    });
+  }
+
+  // ---- theme ----------------------------------------------------------------
+  function currentTheme() {
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  }
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    st.theme = theme;
+    const btn = $('btn-theme');
+    if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
 
   // keep the Preview button + hint in sync with the mode

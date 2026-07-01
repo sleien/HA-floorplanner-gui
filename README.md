@@ -87,8 +87,9 @@ Extras: mouse-wheel to zoom, hold **Space** (or middle-mouse) to pan, **Fit** to
 everything, `Ctrl/Cmd+Z` undo · `Ctrl/Cmd+Shift+Z` redo, and toggles for the grid,
 snapping and dimension lines. The **Text** box sets the base font size (px) for room labels
 and dimensions (and the default for new temperature readouts); it's saved with the
-floorplan and used in the export. Everything is drawn to scale — the grid is 1 m and
-lengths are shown in metres.
+floorplan and used in the export. The **🌙 / ☀️** button toggles a **dark theme** (it
+follows your system by default and is remembered). Everything is drawn to scale — the grid
+is 1 m and lengths are shown in metres.
 
 ## Tracing an existing plan (background image + scale)
 
