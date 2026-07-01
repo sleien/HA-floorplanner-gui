@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Floorplanner → Home Assistant</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">
+      <span class="logo">▦</span>
+      <input id="doc-title" class="doc-title" type="text" value="My Home" title="Floorplan title" />
+    </div>
+    <div class="top-actions">
+      <button id="btn-new" class="btn" title="New floorplan">New</button>
+      <button id="btn-save" class="btn" title="Download project (.json)">Save</button>
+      <label class="btn" title="Open project (.json)">Load<input id="file-load" type="file" accept="application/json" hidden /></label>
+      <label class="btn" title="Add a background image or PDF to trace over">Image / PDF<input id="file-image" type="file" accept="image/*,application/pdf,.pdf" hidden /></label>
+      <span class="sep"></span>
+      <button id="btn-zoom-out" class="btn icon" title="Zoom out">−</button>
+      <button id="btn-zoom-fit" class="btn" title="Fit to view">Fit</button>
+      <button id="btn-zoom-in" class="btn icon" title="Zoom in">+</button>
+      <span class="sep"></span>
+      <label class="toggle"><input id="chk-grid" type="checkbox" checked /> Grid</label>
+      <label class="toggle"><input id="chk-snap" type="checkbox" checked /> Snap</label>
+      <label class="toggle"><input id="chk-dims" type="checkbox" checked /> Dims</label>
+      <label class="toggle num" title="Text size for room labels & dimensions (px)">Text <input id="font-size" type="number" min="6" max="60" step="1" /></label>
+      <span class="sep"></span>
+      <button id="btn-preview" class="btn" title="Preview the Home Assistant interactions — click rooms to toggle lights, fans to spin">▶ Preview</button>
+      <button id="btn-export" class="btn primary" title="Generate SVG, CSS and YAML">Export ⤓</button>
+    </div>
+  </header>
+
+  <aside id="toolbar">
+    <button class="tool" data-tool="select" title="Select / move (V)">
+      <svg viewBox="0 0 24 24"><path d="M5 3l6 16 2-6 6-2z"/></svg><span>Select</span></button>
+    <button class="tool" data-tool="wall" title="Draw walls (W)">
+      <svg viewBox="0 0 24 24"><path d="M3 18h18" stroke-width="4"/></svg><span>Wall</span></button>
+    <button class="tool" data-tool="area" title="Draw a room / lighting area (R)">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/></svg><span>Room</span></button>
+    <button class="tool" data-tool="door" title="Add a door (D)">
+      <svg viewBox="0 0 24 24"><path d="M6 20V5h9v15" fill="none"/><path d="M6 20a13 13 0 0 1 9-13" fill="none"/></svg><span>Door</span></button>
+    <button class="tool" data-tool="window" title="Add a window (N)">
+      <svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="6"/><line x1="4" y1="12" x2="20" y2="12"/></svg><span>Window</span></button>
+    <button class="tool" data-tool="sensor" title="Add a temperature sensor (T)">
+      <svg viewBox="0 0 24 24"><path d="M12 4v9" fill="none"/><circle cx="12" cy="16" r="3" fill="none"/></svg><span>Temp</span></button>
+    <button class="tool" data-tool="fan" title="Add a spinning fan (F)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M12 10c-1-4 1-6 3-6 1 3-1 5-3 6z" fill="currentColor" stroke="none"/><path d="M14 12c4-1 6 1 6 3-3 1-5-1-6-3z" fill="currentColor" stroke="none"/><path d="M10 12c-4 1-6-1-6-3 3-1 5 1 6 3z" fill="currentColor" stroke="none"/></svg><span>Fan</span></button>
+    <button class="tool" data-tool="icon" title="Add a clickable device icon (I)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="1"/><path d="M8 21h8M12 17v4"/></svg><span>Device</span></button>
+    <button class="tool" data-tool="scale" title="Set scale — drag over a known length (S)">
+      <svg viewBox="0 0 24 24"><rect x="2" y="9" width="20" height="6" rx="1"/><path d="M6 9v3M10 9v4M14 9v3M18 9v4"/></svg><span>Scale</span></button>
+    <span class="tool-sep"></span>
+    <button class="tool" data-tool="delete" title="Delete (click element)">
+      <svg viewBox="0 0 24 24"><path d="M6 7h12M9 7V5h6v2M8 7l1 12h6l1-12" fill="none"/></svg><span>Erase</span></button>
+  </aside>
+
+  <main id="canvas-wrap">
+    <svg id="stage" xmlns="http://www.w3.org/2000/svg">
+      <g id="viewport">
+        <g id="background"></g>
+        <g id="grid"></g>
+        <g id="floorplan"></g>
+        <g id="overlay"></g>
+      </g>
+    </svg>
+    <div id="hint" class="hint"></div>
+  </main>
+
+  <aside id="panel">
+    <section id="inspector">
+      <h3>Inspector</h3>
+      <div id="inspector-body" class="muted">Select an element to edit it, or pick a tool and start drawing.</div>
+    </section>
+    <section id="ha-panel">
+      <h3>Home Assistant entities</h3>
+      <p class="muted small">Fill in the entity ids from your HA instance. These drive the generated YAML.</p>
+      <div id="ha-body"></div>
+    </section>
+  </aside>
+
+  <!-- Export modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="tabs">
+          <button class="tab active" data-tab="svg">floorplan.svg</button>
+          <button class="tab" data-tab="css">floorplan.css</button>
+          <button class="tab" data-tab="yaml">dashboard.yaml</button>
+        </div>
+        <button id="modal-close" class="btn icon" title="Close">✕</button>
+      </div>
+      <div class="modal-sub">
+        <label for="export-base">Name / path</label>
+        <input id="export-base" type="text" spellcheck="false" placeholder="my_home" />
+        <span class="muted small">filenames, the <code>/local/floorplan/…</code> folder and the dashboard view <code>path:</code> — give each floorplan a unique one</span>
+      </div>
+      <textarea id="export-text" spellcheck="false" readonly></textarea>
+      <div class="modal-foot">
+        <span id="export-note" class="muted small"></span>
+        <div class="grow"></div>
+        <button id="btn-copy" class="btn">Copy</button>
+        <button id="btn-download" class="btn primary">Download file</button>
+      </div>
+    </div>
+  </div>
+
+  <input id="file-icon" type="file" accept="image/*,.svg" hidden />
+
+  <!-- Add-device dialog -->
+  <div id="device-modal" class="modal hidden">
+    <div class="scale-box">
+      <h3>Add a device icon</h3>
+      <p class="muted small">Type a Material Design Icon name — the same icon set Home Assistant uses.</p>
+      <div class="scale-input">
+        <input id="device-mdi" type="text" placeholder="e.g. television · desktop-classic · power" />
+      </div>
+      <p class="small"><a id="device-browse" href="https://pictogrammers.com/library/mdi/" target="_blank" rel="noopener">Browse the icon library ↗</a></p>
+      <div id="device-msg" class="small" style="color:#e5484d;min-height:16px"></div>
+      <div class="scale-actions">
+        <button id="device-cancel" class="btn">Cancel</button>
+        <button id="device-upload" class="btn">Upload image instead…</button>
+        <button id="device-add" class="btn primary">Add icon</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Set-scale dialog -->
+  <div id="scale-modal" class="modal hidden">
+    <div class="scale-box">
+      <h3>Set scale</h3>
+      <p class="muted small">You drew a line that currently measures <b id="scale-current"></b>.
+        Enter its real length (e.g. drag over your plan's “1 m” scale bar and type 1):</p>
+      <div class="scale-input">
+        <input id="scale-value" type="number" step="0.01" min="0.01" value="1" />
+        <span>metres</span>
+      </div>
+      <div class="scale-actions">
+        <button id="scale-cancel" class="btn">Cancel</button>
+        <button id="scale-apply" class="btn primary">Apply scale</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/geometry.js"></script>
+  <script src="js/symbols.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/editor.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
