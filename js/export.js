@@ -194,8 +194,9 @@ svg, svg * {
 #layer-walls *, #layer-openings *, #layer-labels *, #layer-dims *,
 svg g#layer-walls > path.wall { pointer-events: none !important; }
 
-/* Hover highlight (ha-floorplan adds .floorplan-hover on hover) */
-.floorplan-hover {
+/* Hover highlight — rooms only (ha-floorplan adds .floorplan-hover on hover).
+   Scoped to area paths so it can't stroke device icons or their hit rects. */
+path[id*="area."].floorplan-hover {
   stroke: #03A9F4 !important;
   stroke-width: 1px !important;
   stroke-opacity: 1 !important;

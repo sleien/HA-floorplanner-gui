@@ -174,7 +174,7 @@
       return `<g id="${id}" class="ha-entity icon mdi${dev}" ` +
              `transform="translate(${x} ${y}) scale(${r2(w / 24)} ${r2(h / 24)})" ` +
              `style="color:${esc(color)};--icon-off:${esc(off)}" ${hl}>` +
-             `<rect width="24" height="24" fill="none" pointer-events="all"/>` +
+             `<rect width="24" height="24" fill="none" stroke="none" pointer-events="all"/>` +
              `<path d="${esc(ic.pathData)}" fill="currentColor"/></g>`;
     }
     return `<image id="${id}" class="ha-entity icon${dev}" ` +
