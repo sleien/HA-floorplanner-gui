@@ -75,7 +75,7 @@
   function openingRect(o, extra) {
     const w = o.width, t = (o.wallThickness || FP.STYLE.wallThickness) + 2;
     const cx = o.x, cy = o.y, ang = G.deg(o.angle || 0);
-    return `<rect x="${r2(cx - w / 2)}" y="${r2(cy - t / 2)}" ` +
+    return `<rect class="fp-mask" x="${r2(cx - w / 2)}" y="${r2(cy - t / 2)}" ` +
            `width="${r2(w)}" height="${r2(t)}" fill="${FP.STYLE.opening}" ` +
            `stroke="none" transform="rotate(${r2(ang)} ${r2(cx)} ${r2(cy)})" ${extra || ''}/>`;
   }
@@ -97,10 +97,10 @@
     const openTip = G.add(hinge, G.mul(openDir, w));
     const sweep = swingSign > 0 ? 1 : 0;
 
-    const leaf = `<line x1="${r2(hinge.x)}" y1="${r2(hinge.y)}" ` +
+    const leaf = `<line class="fp-line" x1="${r2(hinge.x)}" y1="${r2(hinge.y)}" ` +
                  `x2="${r2(openTip.x)}" y2="${r2(openTip.y)}" ` +
                  `stroke="${FP.STYLE.door}" stroke-width="2"/>`;
-    const arc = `<path d="M ${r2(closedTip.x)} ${r2(closedTip.y)} ` +
+    const arc = `<path class="fp-line" d="M ${r2(closedTip.x)} ${r2(closedTip.y)} ` +
                 `A ${r2(w)} ${r2(w)} 0 0 ${sweep} ${r2(openTip.x)} ${r2(openTip.y)}" ` +
                 `fill="none" stroke="${FP.STYLE.door}" stroke-width="1.2" stroke-dasharray="4 3"/>`;
     return openingRect(d) + leaf + arc;
@@ -112,10 +112,10 @@
     const t = (o.wallThickness || FP.STYLE.wallThickness);
     const ang = G.deg(o.angle || 0);
     const cx = o.x, cy = o.y;
-    const frame = `<rect x="${r2(cx - w / 2)}" y="${r2(cy - t / 2)}" ` +
+    const frame = `<rect class="fp-frame" x="${r2(cx - w / 2)}" y="${r2(cy - t / 2)}" ` +
       `width="${r2(w)}" height="${r2(t)}" fill="#ffffff" stroke="${FP.STYLE.window}" ` +
       `stroke-width="1.5" transform="rotate(${r2(ang)} ${r2(cx)} ${r2(cy)})"/>`;
-    const glass = `<line x1="${r2(cx - w / 2)}" y1="${r2(cy)}" ` +
+    const glass = `<line class="fp-line" x1="${r2(cx - w / 2)}" y1="${r2(cy)}" ` +
       `x2="${r2(cx + w / 2)}" y2="${r2(cy)}" stroke="${FP.STYLE.window}" ` +
       `stroke-width="1.5" transform="rotate(${r2(ang)} ${r2(cx)} ${r2(cy)})"/>`;
     return openingRect(o) + frame + glass;
@@ -206,13 +206,13 @@
     let ang = G.deg(G.angle(A, B));
     if (ang > 90 || ang < -90) ang += 180;   // keep text upright
     const ln = (x1, y1, x2, y2) =>
-      `<line x1="${r2(x1)}" y1="${r2(y1)}" x2="${r2(x2)}" y2="${r2(y2)}" ` +
+      `<line class="fp-dim-line" x1="${r2(x1)}" y1="${r2(y1)}" x2="${r2(x2)}" y2="${r2(y2)}" ` +
       `stroke="${c}" stroke-width="1"/>`;
     return (
       ln(A.x, A.y, B.x, B.y) +
       ln(tA1.x, tA1.y, tA2.x, tA2.y) +
       ln(tB1.x, tB1.y, tB2.x, tB2.y) +
-      `<text x="${r2(labelPos.x)}" y="${r2(labelPos.y)}" fill="${c}" ` +
+      `<text class="fp-dim-text" x="${r2(labelPos.x)}" y="${r2(labelPos.y)}" fill="${c}" ` +
       `text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="${fsz}" ` +
       `transform="rotate(${r2(ang)} ${r2(labelPos.x)} ${r2(labelPos.y)})">${lenTxt}</text>`
     );

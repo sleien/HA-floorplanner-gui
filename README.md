@@ -155,6 +155,13 @@ is on.
 
 ## How the export maps to ha-floorplan
 
+- **Light & dark HA themes** — the walls, room labels, door/window lines and dimensions in
+  the exported CSS use Home Assistant's own theme variables (`--primary-text-color`,
+  `--card-background-color`, …). So the plan is dark-on-light on a light dashboard and
+  **light-on-dark on a dark dashboard**, automatically. (Opened standalone, it falls back to
+  the original dark-on-white.) Each is overridable via `--fp-wall` / `--fp-label` / `--fp-dim`
+  / `--fp-gap`. Note this is separate from the tool's own 🌙 dark theme, which only styles the
+  editor UI.
 - **Lighting** — each room is `<path id="area.<slug>">`. The `Rooms` rule adds a
   `light-on`/`light-off` class and the CSS colours the room: **grey when off, yellow when
   on**. The colours are the first thing in the exported CSS (`--fp-light-on` /
