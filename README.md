@@ -1,3 +1,5 @@
+<img src="favicon.svg" width="72" align="left" alt="" hspace="6" />
+
 # HA Floorplanner GUI
 
 **Draw a 2D floor plan in your browser and export a ready-to-use [ha-floorplan](https://github.com/ExperienceLovelace/ha-floorplan) SVG + CSS + dashboard YAML for Home Assistant.**
