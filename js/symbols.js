@@ -24,10 +24,11 @@
     tempText: '#263238',   // temperature text — dark so it's readable on the floor
     iconOn: '#2f7ff0',     // default colour a material device icon takes when "on"
     iconOff: '#9e9e9e',    // default colour a material device icon takes when "off"
-    // Inkscape layer highlight colours, by category (shown in the Objects panel)
-    layerHA: '#27ae60ff',          // Home Assistant entities (areas, sensors, fans)
-    layerStructural: '#607d8bff',  // structural (walls, doors, windows)
-    layerAnnotation: '#e0a021ff',  // annotations (labels, dimensions)
+    // Inkscape layer highlight colours, by category (shown in the Objects panel).
+    // Must be 6-digit RGB hex — Inkscape doesn't parse 8-digit RGBA here.
+    layerHA: '#27ae60',          // Home Assistant entities (areas, sensors, fans)
+    layerStructural: '#607d8b',  // structural (walls, doors, windows)
+    layerAnnotation: '#e0a021',  // annotations (labels, dimensions)
     areaPalette: ['#f7c9b6', '#cfc6ef', '#f3b6c2', '#c9d3dd',
                   '#bfe3c9', '#f6e2a8', '#b6d8ef', '#e3c9dd', '#d6d6c2'],
   };
