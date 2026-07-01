@@ -160,17 +160,20 @@ text.sensor, text.sensor tspan,
   font-weight: 600;
 }
 
-/* Device icons — greyed when off, full colour when on */
-.icon { cursor: pointer; transition: opacity .3s ease, filter .3s ease; }
+/* Device icons — state is the device-off / device-on class ha-floorplan sets.
+   NOTE: floorplan.class_set REPLACES an element's classes, so these rules must
+   not depend on the original .icon / .mdi classes (they are gone after the first
+   state update). We key off the state class + element type instead. */
 
-/* uploaded images: dim + greyscale */
-image.icon.device-off { opacity: 0.4; filter: grayscale(0.85); }
-image.icon.device-on  { opacity: 1; filter: drop-shadow(0 0 4px #ffd98a); }
+/* uploaded images: dim + greyscale when off */
+image { transition: opacity .3s ease, filter .3s ease; }
+image.device-off { opacity: 0.4; filter: grayscale(0.85); }
+image.device-on  { opacity: 1; filter: drop-shadow(0 0 4px #ffd98a); }
 
-/* material icons: recolour via fill (own "off" colour when off, "on" colour + glow when on) */
-.icon.mdi path { fill: currentColor; transition: fill .3s ease; }
-.icon.mdi.device-off path { fill: var(--icon-off, #9e9e9e); }
-.icon.mdi.device-on { filter: drop-shadow(0 0 3px currentColor); }
+/* material icons: recolour via fill — "off" colour when off, "on" colour + glow when on */
+g.device-off > path { fill: var(--icon-off, #9e9e9e) !important; transition: fill .3s ease; }
+g.device-on  > path { fill: currentColor !important; transition: fill .3s ease; }
+g.device-on { filter: drop-shadow(0 0 3px currentColor); }
 
 /* Base text colour (room labels etc.) */
 svg tspan {
@@ -182,22 +185,20 @@ svg, svg * {
   vector-effect: non-scaling-stroke !important;
 }
 
-/* Only Home Assistant entities are clickable. Walls, doors, labels and
-   dimensions let taps pass straight through to the room area beneath them —
-   so the walls can sit on top to cover the borders without blocking clicks. */
-svg * { pointer-events: none !important; }
-.wall { pointer-events: none !important; }
-svg g#layer-walls > path.wall {
-  pointer-events: none !important;
-}
-.ha-entity, .ha-entity * { pointer-events: all !important; cursor: pointer; }
+/* Clickability is keyed off LAYER ids, not element classes — ha-floorplan's
+   class_set replaces an element's classes when it writes state, so a class-based
+   rule would stop matching after the first update. Areas, devices and sensors stay
+   clickable; walls, doors, labels and dimensions pass taps straight through to the
+   room area beneath (so the walls can sit on top to cover the borders). */
+#layer-areas *, #layer-devices *, #layer-sensors * { pointer-events: all !important; }
+#layer-walls *, #layer-openings *, #layer-labels *, #layer-dims *,
+svg g#layer-walls > path.wall { pointer-events: none !important; }
 
-/* Hover highlight on any interactive entity */
-.ha-entity:hover {
+/* Hover highlight (ha-floorplan adds .floorplan-hover on hover) */
+.floorplan-hover {
   stroke: #03A9F4 !important;
   stroke-width: 1px !important;
   stroke-opacity: 1 !important;
-  cursor: pointer;
 }
 `;
 

@@ -101,10 +101,10 @@ body.preview #floorplan [id^="area."]:hover { stroke: #03a9f4; stroke-width: 2; 
 #stage .spinning { animation: fp-spin 4s linear infinite; transform-origin: center; transform-box: fill-box; }
 @keyframes fp-spin { to { transform: rotate(360deg); } }
 /* device-icon dim/brighten only while previewing (normal editing shows them full) */
-body.preview #stage image.icon.device-off { opacity: 0.4; filter: grayscale(0.85); }
-body.preview #stage image.icon.device-on { opacity: 1; filter: drop-shadow(0 0 4px #ffd98a); }
-body.preview #stage .icon.mdi.device-off path { fill: var(--icon-off, #9e9e9e); }
-body.preview #stage .icon.mdi.device-on { filter: drop-shadow(0 0 3px currentColor); }
+body.preview #stage image.device-off { opacity: 0.4; filter: grayscale(0.85); }
+body.preview #stage image.device-on { opacity: 1; filter: drop-shadow(0 0 4px #ffd98a); }
+body.preview #stage g.device-off > path { fill: var(--icon-off, #9e9e9e); }
+body.preview #stage g.device-on { filter: drop-shadow(0 0 3px currentColor); }
 .hint {
   position: absolute; left: 12px; bottom: 12px;
   background: rgba(32,35,42,0.86); color: #fff; padding: 6px 11px;

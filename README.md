@@ -67,7 +67,7 @@ Add a clickable device two ways (pick the **Device** tool, click a spot):
 In the Inspector you set:
 
 - **Entity / button / script** — the HA id (`switch.pc`, `media_player.tv`,
-  `button.wake_on_lan_18_c0_4d_8f_a8_cb`, `script.movie_night`). This becomes the SVG id.
+  `button.wake_on_lan_pc`, `script.movie_night`). This becomes the SVG id.
 - **On tap** — *More-info*, *Toggle on/off* (`homeassistant.toggle`), *Press button*
   (`button.press`), *Run script* (`script.turn_on`) or a **custom service** you type.
 - **Grey out when off / colour when on** — dims + greys the icon when the entity is off and
