@@ -482,7 +482,7 @@
       if (el) el.classList.add('spinning');
     }
     for (const ic of FP.model.icons) {
-      if (!ic.stateColor || !(ic.entity && ic.entity.trim())) continue;
+      if (!ic.stateColor || !(ic.entity && ic.entity.trim()) || FP.sym.isMomentary(ic)) continue;
       const el = floorG.querySelector('[id="' + FP.sym.iconElementId(ic) + '"]');
       if (!el) continue;
       el.classList.remove('device-on', 'device-off');

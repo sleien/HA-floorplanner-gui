@@ -145,6 +145,11 @@ body[data-tool="select"] #stage { cursor: default; }
 [data-theme="dark"] #floorplan .fp-dim-line { stroke: var(--fp-dimink) !important; }
 [data-theme="dark"] #floorplan .fp-dim-text { fill: var(--fp-dimink) !important; }
 
+/* Momentary buttons (press / run script) have no on/off state — show them at their
+   off colour in the editor too, matching how Home Assistant renders them. */
+#floorplan g.momentary > path { fill: var(--icon-off, #9e9e9e) !important; }
+#floorplan image.momentary { opacity: 0.5; filter: grayscale(0.8); }
+
 /* Preview mode — simulate the Home Assistant interactions */
 body.preview #stage { cursor: pointer; }
 body.preview #floorplan [id^="area."]:hover { stroke: #03a9f4; stroke-width: 2; }

@@ -298,7 +298,7 @@ path[id*="area."].floorplan-hover {
     for (const ic of icons) {
       y += `  - entity: ${ic.entity.trim()}\n`;
       y += `    tap_action: ${ic.tap || 'more-info'}\n`;
-      if (ic.stateColor) {
+      if (ic.stateColor && !S.isMomentary(ic)) {
         y += `    state_action:\n`;
         y += `      service: floorplan.class_set\n`;
         y += `      service_data: '\${["off","unavailable","idle","standby","unknown"].includes(entity.state) ? "device-off" : "device-on"}'\n`;

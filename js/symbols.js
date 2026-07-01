@@ -55,6 +55,15 @@
   S.iconElementId = (ic) =>
     (ic.entity && ic.entity.trim()) ? ic.entity.trim() : ('icon.' + (ic.slug || 'icon'));
 
+  // A "momentary" icon fires an action but has no on/off state (a button press, a
+  // script/scene run). It should sit at its off/neutral colour, never light up.
+  S.isMomentary = (ic) => {
+    const doms = ['button', 'scene', 'script', 'input_button'];
+    const tapDom = String(ic.tap || '').split('.')[0];
+    const entDom = String(ic.entity || '').split('.')[0];
+    return doms.indexOf(tapDom) >= 0 || doms.indexOf(entDom) >= 0;
+  };
+
   // ---- Area (room floor / lighting overlay) --------------------------------
   // id="area.<slug>" so ha-floorplan can toggle it with the room light.
   S.area = (a) => {
@@ -162,8 +171,11 @@
     const id = esc(S.iconElementId(ic));
     const x = r2(ic.x - w / 2), y = r2(ic.y - h / 2);
     const hl = `inkscape:highlight-color="${FP.STYLE.layerHA}"`;
-    // state colouring only makes sense with an entity; a plain action button stays full colour
-    const dev = (ic.stateColor && ic.entity && ic.entity.trim()) ? ' device-off' : '';
+    // Momentary buttons sit at their off colour. Stateful entities start off until HA
+    // reports their state. Plain custom-service buttons stay full colour.
+    const mom = S.isMomentary(ic);
+    const dev = (mom || (ic.stateColor && ic.entity && ic.entity.trim())) ? ' device-off' : '';
+    const btn = mom ? ' momentary' : '';   // lets the editor preview it as "off" too
     if (ic.pathData) {
       // Material Design Icon — a 24×24 path scaled into place, recoloured via CSS fill.
       // On colour = currentColor; off colour is read from --icon-off by the CSS.
@@ -171,13 +183,13 @@
       const off = ic.colorOff || FP.STYLE.iconOff;
       // an invisible full-size rect makes the whole icon box clickable, not just
       // the painted parts (many MDI icons are hollow outlines)
-      return `<g id="${id}" class="ha-entity icon mdi${dev}" ` +
+      return `<g id="${id}" class="ha-entity icon mdi${dev}${btn}" ` +
              `transform="translate(${x} ${y}) scale(${r2(w / 24)} ${r2(h / 24)})" ` +
              `style="color:${esc(color)};--icon-off:${esc(off)}" ${hl}>` +
              `<rect width="24" height="24" fill="none" stroke="none" pointer-events="all"/>` +
              `<path d="${esc(ic.pathData)}" fill="currentColor"/></g>`;
     }
-    return `<image id="${id}" class="ha-entity icon${dev}" ` +
+    return `<image id="${id}" class="ha-entity icon${dev}${btn}" ` +
            `x="${x}" y="${y}" width="${r2(w)}" height="${r2(h)}" href="${esc(ic.href)}" ` +
            `preserveAspectRatio="xMidYMid meet" ${hl}/>`;
   };
