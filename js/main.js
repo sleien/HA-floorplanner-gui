@@ -385,6 +385,11 @@
         ? '<p class="small muted">This is a button (press / run script or scene) — it has no on/off state, so it just uses the <b>off</b> colour and state-colouring is ignored.</p>'
         : (o.entity && o.entity.trim()) ? ''
         : '<p class="small muted">No entity set — a plain button that runs its tap action. It stays full colour; colour-by-state needs an entity.</p>'}
+      ${(o.stateColor && o.entity && o.entity.trim() && !FP.sym.isMomentary(o))
+        ? `<div class="field"><label>Show as OFF when state is</label>
+             <input id="i-offstates" type="text" placeholder="off, idle, docked, paused" value="${attr(o.offStates)}"></div>
+           <p class="small muted">Comma-separated. Any other state = on. For a vacuum, use <code>docked</code>.</p>`
+        : ''}
       ${o.pathData ? `
       <div class="field" style="margin-top:10px"><label>Material icon</label>
         <input id="i-mdi" type="text" value="${attr(o.mdi || '')}" placeholder="e.g. television"></div>
@@ -474,6 +479,7 @@
       });
       on('i-tapsvc', 'input', (e) => live(() => { o.tap = e.target.value.trim() || 'more-info'; }));
       on('i-statecolor', 'change', (e) => commit(() => { o.stateColor = e.target.checked; }));
+      on('i-offstates', 'input', (e) => live(() => { o.offStates = e.target.value; }));
       on('i-w', 'input', (e) => live(() => { o.w = mToPx(e.target.value) || o.w; }));
       on('i-h', 'input', (e) => live(() => { o.h = mToPx(e.target.value) || o.h; }));
       on('i-replace', 'click', () => { FP._replaceIconId = o.id; $('file-icon').click(); });

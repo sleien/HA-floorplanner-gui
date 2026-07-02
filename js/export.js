@@ -240,6 +240,15 @@ path[id*="area."].floorplan-hover {
   };
 
   // ---- YAML export ---------------------------------------------------------
+  // The states that count as "off" (grey) for a device icon. Editable per icon;
+  // the default covers switches, media players and vacuums (docked/paused).
+  function iconOffStates(ic) {
+    const raw = ic.offStates && ic.offStates.trim();
+    return raw
+      ? raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean)
+      : ['off', 'unavailable', 'unknown', 'idle', 'standby', 'docked', 'paused'];
+  }
+
   // The floorplan config body — everything that sits under a card's `config:`
   // key (image, stylesheet, defaults, rules). Indentation is relative: the top
   // keys start at column 0 so the block can be re-indented wherever it's placed.
@@ -299,9 +308,10 @@ path[id*="area."].floorplan-hover {
       y += `  - entity: ${ic.entity.trim()}\n`;
       y += `    tap_action: ${ic.tap || 'more-info'}\n`;
       if (ic.stateColor && !S.isMomentary(ic)) {
+        const arr = iconOffStates(ic).map((s) => `"${s}"`).join(', ');
         y += `    state_action:\n`;
         y += `      service: floorplan.class_set\n`;
-        y += `      service_data: '\${["off","unavailable","idle","standby","unknown"].includes(entity.state) ? "device-off" : "device-on"}'\n`;
+        y += `      service_data: '\${[${arr}].includes(entity.state) ? "device-off" : "device-on"}'\n`;
       }
     }
 
