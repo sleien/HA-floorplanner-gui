@@ -7,7 +7,7 @@
 
   function blankModel() {
     return {
-      meta: { title: 'My Home', path: '', fontSize: 15 },  // path = base name; fontSize = base text size (px)
+      meta: { title: 'My Home', path: '', fontSize: 15, exportVersion: 0 },  // exportVersion = cache-bust counter
       uid: 1,
       background: null,  // {href, x, y, width, height, naturalW, naturalH, opacity, locked} — trace aid, not exported
       walls: [],     // {id, points:[{x,y}], thickness, closed}
@@ -224,6 +224,7 @@
     for (const c of COLLECTIONS) if (!Array.isArray(out[c])) out[c] = [];
     if (!out.meta) out.meta = { title: 'My Home' };
     if (out.meta.fontSize == null) out.meta.fontSize = 15;
+    if (out.meta.exportVersion == null) out.meta.exportVersion = 0;
     // a background without image data (stripped for autosave) is meaningless
     if (out.background && !out.background.href) out.background = null;
     let maxUid = 1;

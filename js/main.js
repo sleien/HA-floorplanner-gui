@@ -599,6 +599,8 @@
   }
 
   function openExport() {
+    FP.model.meta.exportVersion = (FP.model.meta.exportVersion || 0) + 1;  // bump cache-buster
+    FP.persist();
     const inp = $('export-base');
     inp.value = FP.model.meta.path || '';
     inp.placeholder = G.slug(FP.model.meta.title || 'floorplan');

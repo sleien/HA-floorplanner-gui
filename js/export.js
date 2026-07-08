@@ -262,9 +262,11 @@ path[id*="area."].floorplan-hover {
     const actionIcons = model.icons.filter((i) =>
       !(i.entity && i.entity.trim()) && i.tap && i.tap.trim() && i.tap !== 'more-info');
 
+    // ?v= cache-buster so HA reloads the assets after a re-export
+    const v = (model.meta && model.meta.exportVersion) ? '?v=' + model.meta.exportVersion : '';
     let y = '';
-    y += `image: ${dir}/${base}.svg\n`;
-    y += `stylesheet: ${dir}/${base}.css\n\n`;
+    y += `image: ${dir}/${base}.svg${v}\n`;
+    y += `stylesheet: ${dir}/${base}.css${v}\n\n`;
     y += `defaults:\n`;
     y += `  hover_action: hover-info\n`;
     y += `  tap_action: more-info\n\n`;
