@@ -511,8 +511,9 @@
   }
 
   Ed.applyScale = function (realMeters) {
-    if (!lastMeasure || !(realMeters > 0)) { Ed.cancelScale(); return; }
+    if (!lastMeasure || !Number.isFinite(realMeters) || realMeters <= 0) return false;
     const f = (realMeters * FP.SCALE) / lastMeasure.worldLen;
+    if (!Number.isFinite(f) || f <= 0) return false;
     const pivot = lastMeasure.a;
     FP.beginChange();
     FP.scaleModel(f, pivot);
@@ -520,6 +521,7 @@
     lastMeasure = null;
     setTool('select');
     Ed.zoomFit();
+    return true;
   };
 
   Ed.cancelScale = function () {

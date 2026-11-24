@@ -106,6 +106,10 @@ If you already have a floor-plan image or PDF (a photo, a scan, an architect's d
    drawing (and the image) rescales so your traced walls come out at true dimensions.
 
 Then trace your walls/rooms on top and everything is correctly sized in metres.
+Calibration also moves and resizes uploaded device images and Material Design icons.
+Measurement fields retain the last valid geometry while an entry is empty or invalid;
+enter a positive finite length at or above the field's minimum to apply it.
+Invalid calibration entries leave the dialog open for correction.
 
 ## Wiring up Home Assistant
 
@@ -217,3 +221,10 @@ js/editor.js        # interactive canvas: tools, hit-testing, pan/zoom
 js/main.js          # toolbar, inspector, HA panel, export modal
 vendor/pdfjs/       # Mozilla PDF.js (bundled, loaded lazily only for PDF uploads)
 ```
+
+## Regression checks
+
+With Node.js installed, run `node --test tests/measurements.test.cjs` for focused
+measurement validation, calibration geometry, persistence, undo/redo and export
+checks. UI handler checks use DOM stubs; also verify input feedback and calibration
+interactions in a served browser before release.

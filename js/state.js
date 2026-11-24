@@ -93,6 +93,7 @@
   // Uniformly scale the whole scene (drawing + background) about a pivot so a
   // measured length maps to a chosen real length. FP.SCALE stays fixed at 100px/m.
   FP.scaleModel = function (f, pivot) {
+    if (!Number.isFinite(f) || f <= 0) return;
     const m = FP.model;
     const sp = (q) => ({ x: pivot.x + (q.x - pivot.x) * f, y: pivot.y + (q.y - pivot.y) * f });
     for (const w of m.walls) {
@@ -115,6 +116,10 @@
     for (const fn of m.fans) {
       const c = sp(fn); fn.x = c.x; fn.y = c.y;
       fn.r *= f;
+    }
+    for (const icon of m.icons) {
+      const c = sp(icon); icon.x = c.x; icon.y = c.y;
+      icon.w *= f; icon.h *= f;
     }
     if (m.background) {
       const tl = sp({ x: m.background.x, y: m.background.y });
