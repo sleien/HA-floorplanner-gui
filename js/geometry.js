@@ -46,6 +46,15 @@
   G.toMeters = (px) => px / FP.SCALE;
   G.toPx = (m) => m * FP.SCALE;
 
+  // Parse a complete positive metric length without accepting partial text.
+  // Return null while input is incomplete, out of range, or would overflow.
+  G.parseMeters = (value, min = 0) => {
+    const text = String(value).trim();
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text)) return null;
+    const n = Number(text);
+    return Number.isFinite(n) && n > 0 && n >= min && Number.isFinite(G.toPx(n)) ? n : null;
+  };
+
   // closest point on segment ab to p; returns {point, t, dist}
   G.closestOnSegment = (p, a, b) => {
     const ab = G.sub(b, a);

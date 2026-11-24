@@ -233,3 +233,6 @@ body.preview #stage g.device-on { filter: drop-shadow(0 0 3px currentColor); }
 .scale-input input:focus { outline: none; border-color: var(--accent); }
 .scale-input span { color: var(--muted); font-size: 14px; }
 .scale-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Invalid measurements keep the previous geometry until corrected. */
+input[aria-invalid="true"] { border-color: #dc2626; outline: 1px solid #dc2626; }
