@@ -27,7 +27,8 @@
     selection: null,          // {type, id}
     draft: null,              // in-progress geometry (wall/area point list)
     view: { tx: 60, ty: 60, zoom: 1 },
-    grid: 10,                 // world px (0.1 m)
+    unitSystem: 'metric',
+    grid: 10,                 // world px: 0.1 m metric; 1 in imperial
     snap: true,
     showGrid: true,
     showDims: true,
@@ -49,18 +50,25 @@
     }
   };
 
+  // A unit switch changes preferences only, never the document or undo history.
+  FP.setUnitSystem = function (system) {
+    FP.state.unitSystem = system === 'imperial' ? 'imperial' : 'metric';
+    FP.state.grid = FP.state.unitSystem === 'imperial' ? 2.54 : 10;
+  };
+
   // editor UI preferences persist independently of the document
   FP.savePrefs = function () {
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify({
         showGrid: FP.state.showGrid, snap: FP.state.snap, showDims: FP.state.showDims,
-        theme: FP.state.theme,
+        theme: FP.state.theme, unitSystem: FP.state.unitSystem,
       }));
     } catch (e) { /* ignore */ }
   };
   FP.loadPrefs = function () {
     try {
       const p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+      FP.setUnitSystem(p.unitSystem);
       if (typeof p.showGrid === 'boolean') FP.state.showGrid = p.showGrid;
       if (typeof p.snap === 'boolean') FP.state.snap = p.snap;
       if (typeof p.showDims === 'boolean') FP.state.showDims = p.showDims;
@@ -93,6 +101,7 @@
   // Uniformly scale the whole scene (drawing + background) about a pivot so a
   // measured length maps to a chosen real length. FP.SCALE stays fixed at 100px/m.
   FP.scaleModel = function (f, pivot) {
+    if (!Number.isFinite(f) || f <= 0) return;
     const m = FP.model;
     const sp = (q) => ({ x: pivot.x + (q.x - pivot.x) * f, y: pivot.y + (q.y - pivot.y) * f });
     for (const w of m.walls) {
@@ -115,6 +124,10 @@
     for (const fn of m.fans) {
       const c = sp(fn); fn.x = c.x; fn.y = c.y;
       fn.r *= f;
+    }
+    for (const icon of m.icons) {
+      const c = sp(icon); icon.x = c.x; icon.y = c.y;
+      icon.w *= f; icon.h *= f;
     }
     if (m.background) {
       const tl = sp({ x: m.background.x, y: m.background.y });

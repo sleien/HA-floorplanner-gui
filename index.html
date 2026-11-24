@@ -32,6 +32,9 @@
       <button id="btn-zoom-fit" class="btn" title="Fit to view">Fit</button>
       <button id="btn-zoom-in" class="btn icon" title="Zoom in">+</button>
       <span class="sep"></span>
+      <label class="toggle">Units <select id="unit-system" aria-label="Measurement system">
+        <option value="metric">Metric</option><option value="imperial">US Imperial</option>
+      </select></label>
       <label class="toggle"><input id="chk-grid" type="checkbox" checked /> Grid</label>
       <label class="toggle"><input id="chk-snap" type="checkbox" checked /> Snap</label>
       <label class="toggle"><input id="chk-dims" type="checkbox" checked /> Dims</label>
@@ -142,10 +145,10 @@
     <div class="scale-box">
       <h3>Set scale</h3>
       <p class="muted small">You drew a line that currently measures <b id="scale-current"></b>.
-        Enter its real length (e.g. drag over your plan's “1 m” scale bar and type 1):</p>
+        Enter its real length in the units selected below:</p>
       <div class="scale-input">
         <input id="scale-value" type="number" step="0.01" min="0.01" value="1" />
-        <span>metres</span>
+        <select id="scale-unit" aria-label="Calibration length unit"><option value="m">metres</option></select>
       </div>
       <div class="scale-actions">
         <button id="scale-cancel" class="btn">Cancel</button>

@@ -42,6 +42,7 @@
     wireScaleDialog();
 
     // reflect toggles
+    refreshUnits();
     $('chk-grid').checked = st.showGrid;
     $('chk-snap').checked = st.snap;
     $('chk-dims').checked = st.showDims;
@@ -81,6 +82,13 @@
     $('btn-zoom-in').addEventListener('click', () => FP.editor.zoomBy(1.2));
     $('btn-zoom-out').addEventListener('click', () => FP.editor.zoomBy(1 / 1.2));
     $('btn-zoom-fit').addEventListener('click', () => FP.editor.zoomFit());
+    $('unit-system').addEventListener('change', (e) => {
+      FP.setUnitSystem(e.target.value);
+      FP.savePrefs();
+      refreshUnits();
+      refreshInspector();
+      FP.editor.render();
+    });
     $('chk-grid').addEventListener('change', (e) => { st.showGrid = e.target.checked; FP.savePrefs(); FP.editor.render(); });
     $('chk-snap').addEventListener('change', (e) => { st.snap = e.target.checked; FP.savePrefs(); });
     $('chk-dims').addEventListener('change', (e) => { st.showDims = e.target.checked; FP.savePrefs(); FP.editor.render(); });
@@ -94,6 +102,14 @@
       applyTheme(st.theme === 'dark' ? 'light' : 'dark');
       FP.savePrefs();
     });
+  }
+
+  function refreshUnits() {
+    $('unit-system').value = st.unitSystem;
+    const hint = G.imperial() ? 'Grid: 1 ft; snap: 1 in' : 'Grid: 1 m; snap: 0.1 m';
+    $('unit-system').title = hint;
+    $('chk-grid').parentElement.title = hint;
+    $('chk-snap').parentElement.title = hint;
   }
 
   // ---- theme ----------------------------------------------------------------
@@ -270,10 +286,22 @@
   // ---- scale-calibration dialog --------------------------------------------
   function wireScaleDialog() {
     FP.onScaleMeasured = (currentMeters) => {
-      $('scale-current').textContent = currentMeters.toFixed(2) + ' m';
+      $('scale-current').textContent = G.fmtLength(G.toPx(currentMeters));
+      const unit = G.imperial() ? 'ft' : 'm';
+      $('scale-unit').innerHTML = G.imperial()
+        ? '<option value="ft">feet</option><option value="in">inches</option>'
+        : '<option value="m">metres</option>';
+      $('scale-unit').value = unit;
       const inp = $('scale-value');
       // sensible default: round the current reading to a tidy number
-      inp.value = currentMeters >= 0.75 && currentMeters < 1.5 ? 1 : +currentMeters.toFixed(2);
+      inp.setCustomValidity('');
+      inp.removeAttribute('aria-invalid');
+      inp.dataset.unit = unit;
+      inp.dataset.minMeters = '0.01';
+      inp.min = String(0.01 / G.unitMeters(unit));
+      inp.step = '0.01';
+      const value = unit === 'm' && currentMeters >= 0.75 && currentMeters < 1.5 ? 1 : currentMeters / G.unitMeters(unit);
+      inp.value = G.round(value, unit === 'm' ? 2 : 4);
       $('scale-modal').classList.remove('hidden');
       inp.focus(); inp.select();
     };
@@ -282,6 +310,15 @@
     const close = () => $('scale-modal').classList.add('hidden');
     $('scale-cancel').addEventListener('click', () => { close(); FP.editor.cancelScale(); });
     $('scale-apply').addEventListener('click', applyScale);
+    $('scale-unit').addEventListener('change', (e) => {
+      const inp = $('scale-value');
+      const metres = readMeasurement(inp);
+      inp.dataset.unit = e.target.value;
+      inp.min = String(0.01 / G.unitMeters(e.target.value));
+      if (metres !== null) inp.value = G.round(metres / G.unitMeters(e.target.value), 6);
+      readMeasurement(inp);
+    });
+    $('scale-value').addEventListener('input', (e) => readMeasurement(e.target));
     $('scale-value').addEventListener('keydown', (e) => { if (e.key === 'Enter') applyScale(); });
     $('scale-modal').addEventListener('click', (e) => {
       if (e.target.id === 'scale-modal') { close(); FP.editor.cancelScale(); }
@@ -289,9 +326,16 @@
   }
 
   function applyScale() {
-    const v = parseFloat($('scale-value').value);
+    const inp = $('scale-value');
+    const v = readMeasurement(inp);
+    if (v === null) { inp.reportValidity(); return; }
+    if (FP.editor.applyScale(v) === false) {
+      inp.setCustomValidity('This length cannot be applied to the measured line.');
+      inp.setAttribute('aria-invalid', 'true');
+      inp.reportValidity();
+      return;
+    }
     $('scale-modal').classList.add('hidden');
-    FP.editor.applyScale(v);
   }
 
   // ---- inspector -----------------------------------------------------------
@@ -309,8 +353,22 @@
     wireInspector(sel, o);
   }
 
-  const mToPx = (m) => parseFloat(m) * FP.SCALE;
-  const pxToM = (px) => G.round(px / FP.SCALE, 2);
+  // Use field minima, but allow precise values between spinner increments.
+  function readMeasurement(input) {
+    const unit = input.dataset && input.dataset.unit || 'm';
+    const min = Number(input.dataset && input.dataset.minMeters || input.min) || 0;
+    const value = G.parseLength(input.value, unit, min);
+    const shownMin = min / G.unitMeters(unit);
+    input.setCustomValidity(value === null ? `Enter a finite length of at least ${shownMin} ${unit}, greater than zero.` : '');
+    if (value === null) input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+    return value;
+  }
+  function lengthInput(id, px, min, step) {
+    const unit = G.inputUnit();
+    const value = G.round(G.fromWorld(px, unit), unit === 'm' ? 2 : 6);
+    return `<input id="${id}" type="number" data-unit="${unit}" data-min-meters="${min}" step="${unit === 'm' ? step : 0.125}" min="${min / G.unitMeters(unit)}" value="${value}">`;
+  }
 
   const INSPECTORS = {
     background: (o) => `
@@ -320,11 +378,11 @@
       <label class="toggle"><input id="i-lock" type="checkbox" ${o.locked ? 'checked' : ''}> Lock (draw over it without moving it)</label>
       <div class="field" style="margin-top:12px">
         <button id="i-scale" class="btn block">📏 Set scale from this image</button></div>
-      <p class="muted small">Drag over a known length (e.g. the “1 m” scale bar) and enter its real size.</p>
+      <p class="muted small">Drag over a known length and enter its real size in the selected units.</p>
       <div class="btn-row"><button id="i-del" class="btn danger block">Remove image</button></div>`,
     walls: (o) => `
-      <div class="field"><label>Thickness (m)</label>
-        <input id="i-th" type="number" step="0.01" min="0.02" value="${pxToM(o.thickness || FP.STYLE.wallThickness)}"></div>
+      <div class="field"><label>Thickness (${G.inputUnit()})</label>
+        ${lengthInput('i-th', o.thickness || FP.STYLE.wallThickness, 0.02, 0.01)}</div>
       <label class="toggle"><input id="i-closed" type="checkbox" ${o.closed ? 'checked' : ''}> Closed loop</label>
       ${deleteBtn()}`,
     areas: (o) => `
@@ -338,8 +396,8 @@
         <input id="i-light" type="text" placeholder="light.${attr(o.slug)}" value="${attr(o.light)}"></div>
       ${deleteBtn()}`,
     doors: (o) => `
-      <div class="field"><label>Width (m)</label>
-        <input id="i-w" type="number" step="0.05" min="0.3" value="${pxToM(o.width)}"></div>
+      <div class="field"><label>Width (${G.inputUnit()})</label>
+        ${lengthInput('i-w', o.width, 0.3, 0.05)}</div>
       <div class="field"><label>Angle (°)</label>
         <input id="i-ang" type="number" step="1" value="${Math.round(G.deg(o.angle || 0))}"></div>
       <div class="field"><label>Hinge</label>
@@ -348,8 +406,8 @@
         <span class="seg" id="i-swing"><button data-v="in" class="${o.swing!=='out'?'on':''}">In</button><button data-v="out" class="${o.swing==='out'?'on':''}">Out</button></span></div>
       ${deleteBtn()}`,
     windows: (o) => `
-      <div class="field"><label>Width (m)</label>
-        <input id="i-w" type="number" step="0.05" min="0.3" value="${pxToM(o.width)}"></div>
+      <div class="field"><label>Width (${G.inputUnit()})</label>
+        ${lengthInput('i-w', o.width, 0.3, 0.05)}</div>
       <div class="field"><label>Angle (°)</label>
         <input id="i-ang" type="number" step="1" value="${Math.round(G.deg(o.angle || 0))}"></div>
       ${deleteBtn()}`,
@@ -399,8 +457,8 @@
         <div><label>Colour (off)</label><input id="i-coloroff" class="color-swatch" type="color" value="${o.colorOff || FP.STYLE.iconOff}"></div>
       </div>` : ''}
       <div class="field row" style="margin-top:10px">
-        <div><label>Width (m)</label><input id="i-w" type="number" step="0.05" min="0.1" value="${pxToM(o.w)}"></div>
-        <div><label>Height (m)</label><input id="i-h" type="number" step="0.05" min="0.1" value="${pxToM(o.h)}"></div>
+        <div><label>Width (${G.inputUnit()})</label>${lengthInput('i-w', o.w, 0.1, 0.05)}</div>
+        <div><label>Height (${G.inputUnit()})</label>${lengthInput('i-h', o.h, 0.1, 0.05)}</div>
       </div>
       ${o.pathData ? '' : '<div class="btn-row"><button id="i-replace" class="btn block">Replace image…</button></div>'}
       ${deleteBtn()}`;
@@ -410,8 +468,8 @@
         <input id="i-entity" type="text" placeholder="fan.living_room" value="${attr(o.entity)}"></div>
       <div class="field"><label>SVG element id (matches the entity)</label>
         <input id="i-elid" type="text" value="${attr(FP.sym.fanElementId(o))}" readonly></div>
-      <div class="field"><label>Radius (m)</label>
-        <input id="i-r" type="number" step="0.02" min="0.05" value="${pxToM(o.r)}"></div>
+      <div class="field"><label>Radius (${G.inputUnit()})</label>
+        ${lengthInput('i-r', o.r, 0.05, 0.02)}</div>
       <p class="muted small">This element spins when its switch is on — the CSS animation is included automatically.</p>
       ${deleteBtn()}`,
   };
@@ -426,6 +484,15 @@
 
   function wireInspector(sel, o) {
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
+    const measurement = (id, key) => {
+      on(id, 'input', (e) => {
+        const value = readMeasurement(e.target);
+        if (value !== null) live(() => { o[key] = G.toPx(value); });
+      });
+      on(id, 'change', (e) => {
+        if (readMeasurement(e.target) === null) e.target.reportValidity();
+      });
+    };
     on('i-del', 'click', () => commit(() => FP.remove(sel)));
 
     if (sel.type === 'background') {
@@ -434,7 +501,7 @@
       on('i-scale', 'click', () => FP.editor.setTool('scale'));
     }
     if (sel.type === 'walls') {
-      on('i-th', 'input', (e) => live(() => { o.thickness = mToPx(e.target.value) || FP.STYLE.wallThickness; }));
+      measurement('i-th', 'thickness');
       on('i-closed', 'change', (e) => commit(() => { o.closed = e.target.checked; }));
     }
     if (sel.type === 'areas') {
@@ -443,7 +510,7 @@
       on('i-light', 'input', (e) => live(() => { o.light = e.target.value.trim(); }));
     }
     if (sel.type === 'doors' || sel.type === 'windows') {
-      on('i-w', 'input', (e) => live(() => { o.width = mToPx(e.target.value) || o.width; }));
+      measurement('i-w', 'width');
       on('i-ang', 'input', (e) => live(() => { o.angle = G.rad(parseFloat(e.target.value) || 0); }));
     }
     if (sel.type === 'doors') {
@@ -464,7 +531,7 @@
         live(() => { o.entity = e.target.value.trim(); o.slug = slugFromEntity(o.entity, o.slug); });
         const el = $('i-elid'); if (el) el.value = FP.sym.fanElementId(o);
       });
-      on('i-r', 'input', (e) => live(() => { o.r = mToPx(e.target.value) || o.r; }));
+      measurement('i-r', 'r');
     }
     if (sel.type === 'icons') {
       on('i-name', 'input', (e) => { live(() => { o.name = e.target.value; }); refreshHA(); });
@@ -480,8 +547,8 @@
       on('i-tapsvc', 'input', (e) => live(() => { o.tap = e.target.value.trim() || 'more-info'; }));
       on('i-statecolor', 'change', (e) => commit(() => { o.stateColor = e.target.checked; }));
       on('i-offstates', 'input', (e) => live(() => { o.offStates = e.target.value; }));
-      on('i-w', 'input', (e) => live(() => { o.w = mToPx(e.target.value) || o.w; }));
-      on('i-h', 'input', (e) => live(() => { o.h = mToPx(e.target.value) || o.h; }));
+      measurement('i-w', 'w');
+      measurement('i-h', 'h');
       on('i-replace', 'click', () => { FP._replaceIconId = o.id; $('file-icon').click(); });
       on('i-color', 'input', (e) => live(() => { o.color = e.target.value; }));
       on('i-coloroff', 'input', (e) => live(() => { o.colorOff = e.target.value; }));
