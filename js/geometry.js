@@ -55,6 +55,28 @@
     return Number.isFinite(n) && n > 0 && n >= min && Number.isFinite(G.toPx(n)) ? n : null;
   };
 
+  // Display units are independent of the fixed world-coordinate scale.
+  G.unitMeters = (unit) => unit === 'in' ? 0.0254 : unit === 'ft' ? 0.3048 : 1;
+  G.imperial = () => FP.state && FP.state.unitSystem === 'imperial';
+  G.inputUnit = () => G.imperial() ? 'in' : 'm';
+  G.fromWorld = (px, unit) => G.toMeters(px) / G.unitMeters(unit);
+  G.parseLength = (text, unit, minMeters = 0) => {
+    const n = G.parseMeters(text);
+    if (n === null) return null;
+    const metres = n * G.unitMeters(unit);
+    return Number.isFinite(metres) && metres > 0 &&
+      metres >= minMeters - Math.abs(minMeters) * 1e-12 &&
+      Number.isFinite(G.toPx(metres)) ? metres : null;
+  };
+  G.fmtLength = (px) => {
+    if (!G.imperial()) return G.fmtMeters(px);
+    // Round total inches first so 11.999 inches carries into the next foot.
+    const total = Math.round(G.fromWorld(px, 'in') * 100);
+    const feet = Math.floor(total / 1200);
+    const inches = (total % 1200) / 100;
+    return feet ? `${feet} ft ${inches} in` : `${inches} in`;
+  };
+
   // closest point on segment ab to p; returns {point, t, dist}
   G.closestOnSegment = (p, a, b) => {
     const ab = G.sub(b, a);

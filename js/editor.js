@@ -734,7 +734,7 @@
     const v = st.view;
     const wMin = -v.tx / v.zoom, wMax = (r.width - v.tx) / v.zoom;
     const hMin = -v.ty / v.zoom, hMax = (r.height - v.ty) / v.zoom;
-    const step = 100; // 1 m
+    const step = G.imperial() ? 30.48 : 100; // 1 ft or 1 m
     const dark = document.documentElement.getAttribute('data-theme') === 'dark';
     const cMinor = dark ? '#282c34' : '#eceef2';
     const cMajor = dark ? '#363c47' : '#d3d8e0';
@@ -794,7 +794,7 @@
       out += `<circle cx="${g.B.x}" cy="${g.B.y}" r="${4 * s}" fill="#03A9F4"/>`;
       const nrm = { x: -Math.sin(g.angle), y: Math.cos(g.angle) };
       const lp = G.add(g.center, G.mul(nrm, -(create.thickness / 2 + 16)));
-      out += textTag(G.fmtMeters(g.width), lp.x, lp.y, s, '#0369a1');
+      out += textTag(G.fmtLength(g.width), lp.x, lp.y, s, '#0369a1');
     }
 
     // scale-calibration line (in progress or captured)
@@ -809,7 +809,7 @@
                `stroke="#16a34a" stroke-width="${2 * s}"/>`;
       }
       const mid = G.mul(G.add(a, b), 0.5);
-      out += textTag(G.fmtMeters(G.dist(a, b)), mid.x, mid.y - 10 * s, s, '#15803d');
+      out += textTag(G.fmtLength(G.dist(a, b)), mid.x, mid.y - 10 * s, s, '#15803d');
     }
 
     // draft preview
@@ -831,7 +831,7 @@
       if (preview && pts.length) {
         const a = pts[pts.length - 1];
         const mid = G.mul(G.add(a, preview), 0.5);
-        out += textTag(G.fmtMeters(G.dist(a, preview)), mid.x, mid.y - 8 * s, s, '#0369a1');
+        out += textTag(G.fmtLength(G.dist(a, preview)), mid.x, mid.y - 8 * s, s, '#0369a1');
       }
     }
 
@@ -853,7 +853,7 @@
           for (let i = 0; i < o.points.length - (sel.type === 'areas' ? 0 : 1); i++) {
             const a = o.points[i], b = o.points[(i + 1) % o.points.length];
             const mid = G.mul(G.add(a, b), 0.5);
-            out += textTag(G.fmtMeters(G.dist(a, b)), mid.x, mid.y, s, '#c2410c');
+            out += textTag(G.fmtLength(G.dist(a, b)), mid.x, mid.y, s, '#c2410c');
           }
         } else if (sel.type === 'doors' || sel.type === 'windows') {
           const dir = { x: Math.cos(o.angle || 0), y: Math.sin(o.angle || 0) };
@@ -874,7 +874,7 @@
           const sideSign = sel.type === 'doors' ? (o.swing === 'out' ? -1 : 1) : -1;
           const lpOff = sel.type === 'doors' ? halfT2 + 40 : halfT2 + 16;
           const lp = G.add(o, G.mul(nrm, sideSign * lpOff));
-          out += textTag(G.fmtMeters(o.width), lp.x, lp.y, s, '#c2410c');
+          out += textTag(G.fmtLength(o.width), lp.x, lp.y, s, '#c2410c');
         } else {
           const b = selBounds(sel, o);
           out += `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="none" ` +

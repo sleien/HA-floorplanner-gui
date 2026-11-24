@@ -88,8 +88,27 @@ everything, `Ctrl/Cmd+Z` undo · `Ctrl/Cmd+Shift+Z` redo, and toggles for the gr
 snapping and dimension lines. The **Text** box sets the base font size (px) for room labels
 and dimensions (and the default for new temperature readouts); it's saved with the
 floorplan and used in the export. The **🌙 / ☀️** button toggles a **dark theme** (it
-follows your system by default and is remembered). Everything is drawn to scale — the grid
-is 1 m and lengths are shown in metres.
+follows your system by default and is remembered).
+
+### Measurement units
+
+Use **Units → Metric / US Imperial** in the top bar. The choice is remembered in
+this browser independently of saved projects; old projects default to metric in a
+browser without a saved preference. Switching units never resizes or re-snaps the drawing.
+
+| Setting | Metric | US Imperial |
+| --- | --- | --- |
+| Visible grid / snapping | 1 m / 0.1 m | 1 ft / 1 in |
+| Inspector measurements | Metres | Decimal inches |
+| Dimension labels, including SVG export | Metres, two decimals | Feet and inches, nearest 0.01 in |
+| Calibration input | Metres | Decimal feet or inches, selectable in the dialog |
+
+Enter plain numbers in the labeled unit: a 3-foot door is `36` in the inspector;
+a length of 8 ft 6 in is `8.5` feet or `102` inches in calibration. For fractional
+inches, use decimals (`0.5`, not `1/2`). Inspector spinners use 0.125-inch increments
+in imperial mode; typed values can be more precise. Field minimums preserve the
+same physical limits in both systems. Dimension rounding only affects displayed text.
+Fonts, angles, object defaults, and saved world coordinates retain their existing meanings.
 
 ## Tracing an existing plan (background image + scale)
 
@@ -105,7 +124,7 @@ If you already have a floor-plan image or PDF (a photo, a scan, an architect's d
    marker (or over any wall whose real length you know), and type the real length. The whole
    drawing (and the image) rescales so your traced walls come out at true dimensions.
 
-Then trace your walls/rooms on top and everything is correctly sized in metres.
+Then trace your walls/rooms on top and everything is correctly sized in the selected units.
 Calibration also moves and resizes uploaded device images and Material Design icons.
 Measurement fields retain the last valid geometry while an entry is empty or invalid;
 enter a positive finite length at or above the field's minimum to apply it.

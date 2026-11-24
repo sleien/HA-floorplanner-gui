@@ -203,7 +203,7 @@
     `font-size="${l.size || 15}" fill="${FP.STYLE.label}">${esc(l.text)}</text>`;
 
   // ---- Dimension line ------------------------------------------------------
-  // Draws an offset dimension between a and b with tick marks and a metre label.
+  // Draws an offset dimension between a and b with tick marks and a label in the selected units.
   S.dimension = (a, b, offset, fontSize) => {
     const dir = G.norm(G.sub(b, a));
     const n = G.perp(dir);                 // offset direction
@@ -215,7 +215,7 @@
     const fsz = fontSize || 12;
     const mid = G.mul(G.add(A, B), 0.5);
     const labelPos = G.add(mid, G.mul(n, fsz));
-    const lenTxt = G.fmtMeters(G.dist(a, b));
+    const lenTxt = G.fmtLength(G.dist(a, b));
     const c = FP.STYLE.dim;
     let ang = G.deg(G.angle(A, B));
     if (ang > 90 || ang < -90) ang += 180;   // keep text upright

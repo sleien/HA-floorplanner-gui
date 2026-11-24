@@ -27,7 +27,8 @@
     selection: null,          // {type, id}
     draft: null,              // in-progress geometry (wall/area point list)
     view: { tx: 60, ty: 60, zoom: 1 },
-    grid: 10,                 // world px (0.1 m)
+    unitSystem: 'metric',
+    grid: 10,                 // world px: 0.1 m metric; 1 in imperial
     snap: true,
     showGrid: true,
     showDims: true,
@@ -49,18 +50,25 @@
     }
   };
 
+  // A unit switch changes preferences only, never the document or undo history.
+  FP.setUnitSystem = function (system) {
+    FP.state.unitSystem = system === 'imperial' ? 'imperial' : 'metric';
+    FP.state.grid = FP.state.unitSystem === 'imperial' ? 2.54 : 10;
+  };
+
   // editor UI preferences persist independently of the document
   FP.savePrefs = function () {
     try {
       localStorage.setItem(PREFS_KEY, JSON.stringify({
         showGrid: FP.state.showGrid, snap: FP.state.snap, showDims: FP.state.showDims,
-        theme: FP.state.theme,
+        theme: FP.state.theme, unitSystem: FP.state.unitSystem,
       }));
     } catch (e) { /* ignore */ }
   };
   FP.loadPrefs = function () {
     try {
       const p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
+      FP.setUnitSystem(p.unitSystem);
       if (typeof p.showGrid === 'boolean') FP.state.showGrid = p.showGrid;
       if (typeof p.snap === 'boolean') FP.state.snap = p.snap;
       if (typeof p.showDims === 'boolean') FP.state.showDims = p.showDims;

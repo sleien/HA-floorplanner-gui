@@ -236,3 +236,5 @@ body.preview #stage g.device-on { filter: drop-shadow(0 0 3px currentColor); }
 
 /* Invalid measurements keep the previous geometry until corrected. */
 input[aria-invalid="true"] { border-color: #dc2626; outline: 1px solid #dc2626; }
+
+#unit-system, #scale-unit { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 4px; }

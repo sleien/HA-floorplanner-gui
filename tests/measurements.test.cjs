@@ -3,8 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-function app() {
-  const storage = new Map();
+function app(storage = new Map()) {
   const context = vm.createContext({ window: {}, localStorage: {
     setItem: (k, v) => storage.set(k, v), getItem: k => storage.get(k)
   }});
@@ -62,14 +61,15 @@ function ui() {
   const elements = new Map();
   const element = id => {
     if (!elements.has(id)) elements.set(id, {
-      value: '', min: '0', handlers: {}, attrs: {}, hidden: false,
+      value: '', min: '0', dataset: {}, handlers: {}, attrs: {}, hidden: false,
+      focus() {}, select() {},
       querySelectorAll() { return []; },
       addEventListener(type, fn) { this.handlers[type] = fn; },
       setCustomValidity(message) { this.error = message; },
       setAttribute(k,v) { this.attrs[k] = v; },
       removeAttribute(k) { delete this.attrs[k]; },
       reportValidity() { this.reported = true; },
-      classList: { add() { element(id).hidden = true; } }
+      classList: { add() { element(id).hidden = true; }, remove() { element(id).hidden = false; } }
     });
     return elements.get(id);
   };
@@ -79,7 +79,7 @@ function ui() {
   }});
   const source = fs.readFileSync(path.join(__dirname,'../js/main.js'),'utf8');
   vm.runInContext(source.replace('})(window.FP = window.FP || {});',
-    'FP.testUI = {wireInspector, applyScale}; })(window.FP = window.FP || {});'), context);
+    'FP.testUI = {wireInspector, applyScale, wireScaleDialog, lengthInput, INSPECTORS}; })(window.FP = window.FP || {});'), context);
   return {FP, element};
 }
 test('all physical inspector handlers preserve geometry for bad input and recover with precise valid values', () => {
@@ -131,4 +131,87 @@ test('editor calibration rejects invalid factors without losing the measurement 
   assert.deepEqual(plain(FP.model.icons[0]), {id:'e1',x:50,y:80,w:80,h:120});
   FP.undo(); assert.equal(FP.snapshot(), before);
   FP.redo(); assert.equal(FP.model.icons[0].w,80);
+});
+
+test('imperial conversion, strict numeric parsing and dimension rounding', () => {
+  const FP = app(), G = FP.geom;
+  for (const [value,unit,px] of [['12','in',30.48],['1','ft',30.48],['36','in',91.44],['1','m',100]]) {
+    assert.ok(Math.abs(G.toPx(G.parseLength(value,unit)) - px) < 1e-10);
+    assert.ok(Math.abs(G.fromWorld(px,unit) - Number(value)) < 1e-10);
+  }
+  FP.setUnitSystem('imperial');
+  assert.equal(G.fmtLength(30.48),'1 ft 0 in');
+  assert.equal(G.fmtLength(91.44),'3 ft 0 in');
+  assert.equal(G.fmtLength(2.54*11.999),'1 ft 0 in');
+  assert.equal(G.fmtLength(2.54*102.5),'8 ft 6.5 in');
+  for (const value of ['', '-', '1/2', '2 ft', '2junk', 'Infinity','0','-1']) assert.equal(G.parseLength(value,'in'),null);
+  assert.equal(G.parseLength('1','in',.3),null);
+  FP.setUnitSystem('metric'); assert.equal(G.fmtLength(100),'1.00 m');
+});
+test('unit preference survives reload and never changes project data or geometry', () => {
+  const storage = new Map(); const FP = app(storage);
+  FP.model.walls = [{id:'e1',points:[{x:0,y:0},{x:100,y:100}],thickness:12}]; FP.model.uid=2;
+  const snapshot=FP.snapshot();
+  for(let i=0;i<50;i++) {
+    FP.setUnitSystem('imperial'); assert.equal(FP.state.grid,2.54);
+    FP.setUnitSystem('metric'); assert.equal(FP.state.grid,10);
+  }
+  assert.equal(FP.snapshot(),snapshot);
+  FP.persist(); FP.setUnitSystem('imperial'); FP.savePrefs();
+  const fresh=app(storage); fresh.load(); fresh.loadPrefs();
+  assert.equal(fresh.snapshot(),snapshot); assert.equal(fresh.state.unitSystem,'imperial'); assert.equal(fresh.state.grid,2.54);
+  for(const prefs of [{},{unitSystem:'invalid'}]) {
+    storage.set('floorplanner_ha_prefs_v1',JSON.stringify(prefs)); fresh.loadPrefs();
+    assert.equal(fresh.state.unitSystem,'metric'); assert.equal(fresh.state.grid,10);
+  }
+});
+test('imperial changes only SVG dimension text, preserving CSS, YAML and model', () => {
+  const FP=app();
+  FP.model.walls=[{id:'e1',points:[{x:0,y:0},{x:91.44,y:30.48}],thickness:12}];
+  const snapshot=FP.snapshot(), metric=FP.buildExportSVG(FP.model), css=FP.buildCSS(FP.model), yaml=FP.buildYAML(FP.model);
+  FP.setUnitSystem('imperial'); const imperial=FP.buildExportSVG(FP.model);
+  assert.ok(imperial.includes('3 ft 0 in') && imperial.includes('1 ft 0 in'));
+  const strip=s=>s.replace(/(<text class="fp-dim-text"[^>]*>)[^<]*(<\/text>)/g,'$1$2');
+  assert.equal(strip(imperial),strip(metric)); assert.equal(FP.snapshot(),snapshot);
+  assert.equal(FP.buildCSS(FP.model),css); assert.equal(FP.buildYAML(FP.model),yaml);
+  FP.setUnitSystem('metric'); assert.equal(FP.buildExportSVG(FP.model),metric);
+});
+test('every imperial inspector field renders inches and converts valid edits while preserving bad-input behavior', () => {
+  for (const [type,id,key,min] of [['walls','i-th','thickness',.02],['doors','i-w','width',.3],['windows','i-w','width',.3],['fans','i-r','r',.05],['icons','i-w','w',.1],['icons','i-h','h',.1]]) {
+    const {FP,element}=ui(); FP.setUnitSystem('imperial');
+    const object={[key]:91.44}; const markup=FP.testUI.lengthInput(id,object[key],min,.05);
+    assert.ok(markup.includes('data-unit="in"')); assert.ok(markup.includes('value="36"'));
+    FP.testUI.wireInspector({type},object);
+    const input=element(id); input.dataset={unit:'in',minMeters:String(min)};
+    input.value='-1'; input.handlers.input({target:input}); assert.equal(object[key],91.44);
+    input.value='48.125'; input.handlers.input({target:input}); assert.ok(Math.abs(object[key]-122.2375)<1e-9);
+    assert.equal(input.error,'');
+  }
+});
+test('imperial calibration opens in feet, switches to inches and passes metres to the editor', () => {
+  const {FP,element}=ui(); FP.setUnitSystem('imperial'); FP.testUI.wireScaleDialog();
+  FP.onScaleMeasured(.9144);
+  const input=element('scale-value'), unit=element('scale-unit');
+  assert.equal(input.dataset.unit,'ft'); assert.equal(Number(input.value),3);
+  assert.equal(element('scale-current').textContent,'3 ft 0 in');
+  unit.value='in'; unit.handlers.change({target:unit});
+  assert.equal(Number(input.value),36); assert.equal(input.dataset.unit,'in');
+  let metres; FP.editor.applyScale=value=>{metres=value;return true;};
+  FP.testUI.applyScale(); assert.ok(Math.abs(metres-.9144)<1e-12);
+});
+
+test('grid rendering and snap points follow imperial spacing without mutating geometry', () => {
+  const FP=app(), grid={innerHTML:''};
+  const context=vm.createContext({window:{FP}, document:{documentElement:{getAttribute:()=> 'light'}}});
+  const source=fs.readFileSync(path.join(__dirname,'../js/editor.js'),'utf8');
+  context.testGrid=grid;
+  vm.runInContext(source.replace('  FP.editor = Ed;',
+    '  stage={getBoundingClientRect:()=>({width:200,height:200})}; gridG=testGrid; Ed.testGrid=renderGrid; Ed.testSnap=snapWorld; FP.editor=Ed;'),context);
+  FP.state.view={tx:0,ty:0,zoom:1}; const before=FP.snapshot();
+  FP.setUnitSystem('imperial'); FP.editor.testGrid();
+  assert.ok(grid.innerHTML.includes('x1="30.48"'));
+  const point=FP.editor.testSnap({x:7,y:10},{noVertex:true});
+  assert.ok(Math.abs(point.x-7.62)<1e-10 && Math.abs(point.y-10.16)<1e-10);
+  FP.setUnitSystem('metric'); FP.editor.testGrid(); assert.ok(grid.innerHTML.includes('x1="100"'));
+  assert.equal(FP.snapshot(),before);
 });
